@@ -1,4 +1,4 @@
-## Kudos StevenBrown 
+## Kudos StevenBrown 
 """A base agent to write custom scripted agents."""
 
 from __future__ import absolute_import
@@ -8,18 +8,20 @@ from __future__ import print_function
 from pysc2.lib import actions
 from pysc2.agents import base_agent
 from pysc2.lib import features 
-
+import time
 
 # Functions
-_BUILD_PYLON = actions.Function.Build_Pylon_screen.id
-_NOOP = actions.Function.no_op.id
-_SELECT_POINT = actions.Function.select_point.id
-_MOVE_CAMERA = actions.Function.move_camera.id
-_BUILD_GATEWAY = actions.Function.Build_Gateway_screen.id
+_BUILD_PYLON = actions.FUNCTIONS.Build_Pylon_screen.id
+_NOOP = actions.FUNCTIONS.no_op.id
+_SELECT_POINT = actions.FUNCTIONS.select_point.id
+_MOVE_CAMERA = actions.FUNCTIONS.move_camera.id
+_BUILD_GATEWAY = actions.FUNCTIONS.Build_Gateway_screen.id
 
 # Features
-_PLAYER_RELATIVE = features.ScreenFeatures.player_relative.index
-_UNIT_TYPE = features.ScreenFeatures.unit_type.index
+_PLAYER_RELATIVE = features.SCREEN_FEATURES.player_relative.index
+_UNIT_TYPE = features.SCREEN_FEATURES.unit_type.index
+
+_PLAYER_SELF = 1
 
 #Unit IDs
 _PROTOSS_NEXUS = 59
@@ -34,7 +36,7 @@ _SUPPLY_MAX = 4
 _NOT_QUEUED = [0]
 _QUEUED = [1]
 
-class BaseAgent(object):
+class SimpleAgent(base_agent.BaseAgent):
   base_top_left = None
   pylon_built = False
   probe_selected = False
@@ -48,32 +50,19 @@ class BaseAgent(object):
         
       return [x + x_distance, y + y_distance]  
   
-  
-  def __init__(self):
-    self.reward = 0
-    self.episodes = 0
-    self.steps = 0
-    self.obs_spec = None
-    self.action_spec = None
 
-  def setup(self, obs_spec, action_spec):
-    self.obs_spec = obs_spec
-    self.action_spec = action_spec
-
-  def reset(self):
-    self.episodes += 1
 
   def step(self, obs):
       super(SimpleAgent, self).step(obs)
         
       time.sleep(0.5)
         
-      if self.base_top_left is None:
-          player_y, player_x = (obs.observation["minimap"][_PLAYER_RELATIVE] == _PLAYER_SELF).nonzero()
-          self.base_top_left = player_y.mean() <= 47
+      #if self.base_top_left is None:
+          #player_y, player_x = (obs.observation['minimap'][_PLAYER_RELATIVE] == _PLAYER_SELF).nonzero()
+          #self.base_top_left = player_y.mean() <= 47
             
-      if not self.supply_depot_built:
-          if not self.scv_selected:
+      if not self.pylon_built:
+          if not self.probe_selected:
               unit_type = obs.observation["screen"][_UNIT_TYPE]
               unit_y, unit_x = (unit_type == _PROTOSS_PROBE).nonzero()
                 
