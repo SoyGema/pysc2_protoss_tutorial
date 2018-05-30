@@ -25,9 +25,12 @@ _UNIT_TYPE = features.ScreenFeatures.unit_type.index
 _PROTOSS_NEXUS = 59
 _PROTOSS_PROBE = 84
 _PROTOSS_PYLON = 60
+_PROTOSS_GATEWAY = 62
 
 #Parameters
 _PLAYER_SELF = 1
+_SUPPLY_USED = 3
+_SUPPLY_MAX = 4
 _NOT_QUEUED = [0]
 _QUEUED = [1]
 
@@ -35,7 +38,9 @@ class BaseAgent(object):
   base_top_left = None
   pylon_built = False
   probe_selected = False
-
+  gateway_built = False
+  gateway_selected = False
+  gateway_rallied = False 
   
   def transformLocation(self, x, x_distance, y, y_distance):
       if not self.base_top_left:
@@ -43,11 +48,7 @@ class BaseAgent(object):
         
       return [x + x_distance, y + y_distance]  
   
-  if self.base_top_left is None:
-    player_y, player_x = (obs.observation["minimap"][_PLAYER_RELATIVE] == _PLAYER_SELF).nonzero()
-    self.base_top_left = player_y.mean() <= 47
-    
-    
+  
   def __init__(self):
     self.reward = 0
     self.episodes = 0
@@ -69,7 +70,7 @@ class BaseAgent(object):
         
       if self.base_top_left is None:
           player_y, player_x = (obs.observation["minimap"][_PLAYER_RELATIVE] == _PLAYER_SELF).nonzero()
-          self.base_top_left = player_y.mean() <= 31
+          self.base_top_left = player_y.mean() <= 47
             
       if not self.supply_depot_built:
           if not self.scv_selected:
@@ -78,7 +79,7 @@ class BaseAgent(object):
                 
               target = [unit_x[0], unit_y[0]]
                 
-              self.scv_selected = True
+              self.probe_selected = True
                 
               return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
           elif _BUILD_PYLON in obs.observation["available_actions"]:
@@ -87,16 +88,16 @@ class BaseAgent(object):
                 
               target = self.transformLocation(int(unit_x.mean()), 0, int(unit_y.mean()), 20)
                 
-              self.supply_depot_built = True
+              self.pylon_built = True
                 
               return actions.FunctionCall(_BUILD_PYLON, [_NOT_QUEUED, target])
-      elif not self.barracks_built and _BUILD_GATEWAY in obs.observation["available_actions"]:
+      elif not self.gateway_built and _BUILD_GATEWAY in obs.observation["available_actions"]:
           unit_type = obs.observation["screen"][_UNIT_TYPE]
           unit_y, unit_x = (unit_type == _PROTOSS_NEXUS).nonzero()
             
           target = self.transformLocation(int(unit_x.mean()), 20, int(unit_y.mean()), 0)
             
-          self.barracks_built = True
+          self.pylon_built = True
             
           return actions.FunctionCall(_BUILD_GATEWAY, [_NOT_QUEUED, target])
 
