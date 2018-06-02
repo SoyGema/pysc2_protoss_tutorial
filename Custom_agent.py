@@ -9,7 +9,7 @@ from pysc2.lib import actions
 from pysc2.agents import base_agent
 from pysc2.lib import features 
 import time
-import json
+import numpy
 
 # Functions
 _BUILD_PYLON = actions.FUNCTIONS.Build_Pylon_screen.id
@@ -19,7 +19,6 @@ _MOVE_CAMERA = actions.FUNCTIONS.move_camera.id
 _BUILD_GATEWAY = actions.FUNCTIONS.Build_Gateway_screen.id
 
 # Features
-_PLAYER_RELATIVE = features.SCREEN_FEATURES.player_relative.index
 _UNIT_TYPE = features.SCREEN_FEATURES.unit_type.index
 
 _PLAYER_SELF = 1
@@ -43,23 +42,31 @@ class SimpleAgent(base_agent.BaseAgent):
   probe_selected = False
   gateway_built = False
   gateway_selected = False
-  gateway_rallied = False 
-  
-  def transformLocation(self, x, x_distance, y, y_distance):
-      if not self.base_top_left:
-          return [x - x_distance, y - y_distance]
-        
-      return [x + x_distance, y + y_distance]  
-  
+  gateway_rallied = False
+
+  def _xy_locs(mask):
+      """Mask should be a set of bools from comparison with a feature layer."""
+      y, x = mask.nonzero()
+      return list(zip(x, y))
+
 
 
   def step(self, obs):
       super(SimpleAgent, self).step(obs)
-        
-        
+
+      def _xy_locs(mask):
+          """Mask should be a set of bools from comparison with a feature layer."""
+          y, x = mask.nonzero()
+          return list(zip(x, y))
+
       #if self.base_top_left is None:
           #player_y, player_x = (obs.observation['minimap'][_PLAYER_RELATIVE] == _PLAYER_SELF).nonzero()
           #self.base_top_left = player_y.mean() <= 47
+
+      if self.base_top_left is None:
+          PLAYER_RELATIVE = obs.observation.feature_screen.player_relative
+          player_ = _xy_locs(PLAYER_RELATIVE == _PLAYER_SELF)
+          self.base_top_left = numpy.mean(player_, axis=0).round()
 
       if not self.pylon_built:
           if not self.probe_selected:
@@ -76,16 +83,20 @@ class SimpleAgent(base_agent.BaseAgent):
               unit_y, unit_x = (unit_type == _PROTOSS_NEXUS).nonzero()
 
               # Change the position to give the probe the opportunity to build pylon?
-              target = self.transformLocation(int(unit_x.mean()), 0, int(unit_y.mean()), 20)
-                
+              ####target = self.transformLocation(int(unit_x.mean()), 0, int(unit_y.mean()), 20)
+
+              target = [unit_x[0], unit_y[0]]
+
               self.pylon_built = True
                 
               return actions.FunctionCall(_BUILD_PYLON, [_NOT_QUEUED, target])
       elif not self.gateway_built and _BUILD_GATEWAY in obs.observation["available_actions"]:
           unit_type = obs.observation["feature_screen"][_UNIT_TYPE]
           unit_y, unit_x = (unit_type == _PROTOSS_NEXUS).nonzero()
-            
-          target = self.transformLocation(int(unit_x.mean()), 20, int(unit_y.mean()), 0)
+
+          target = [unit_x[0], unit_y[0]]
+
+          #target = self.transformLocation(int(unit_x.mean()), 20, int(unit_y.mean()), 0)
             
           self.pylon_built = True
             
