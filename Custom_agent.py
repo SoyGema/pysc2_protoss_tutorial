@@ -1,4 +1,12 @@
-## Kudos StevenBrown 
+
+## Kudos to StevenBrown 
+# This is a scripted bot experiment to try the new release of pysc2 
+# The original tutorial by Steven Brown with Terran can be found here 
+# https://chatbotslife.com/building-a-basic-pysc2-agent-b109cde1477c
+
+# The bot has been built with Protoss race 
+## At this point this scripted bot is able to select a probe and build a pylon 
+
 """A base agent to write custom scripted agents."""
 
 from __future__ import absolute_import
@@ -66,26 +74,27 @@ class SimpleAgent(base_agent.BaseAgent):
       if self.base_top_left is None:
           PLAYER_RELATIVE = obs.observation.feature_screen.player_relative
           player_ = _xy_locs(PLAYER_RELATIVE == _PLAYER_SELF)
-          self.base_top_left = numpy.mean(player_, axis=0).round()
+          self.base_top_left = numpy.mean(player_, axis=0).round() <= 31
 
       if not self.pylon_built:
           if not self.probe_selected:
               unit_type = obs.observation["feature_screen"][_UNIT_TYPE]
               unit_y, unit_x = (unit_type == _PROTOSS_PROBE).nonzero()
-                
               target = [unit_x[0], unit_y[0]]
                 
               self.probe_selected = True
                 
               return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
+
           elif _BUILD_PYLON in obs.observation["available_actions"]:
               unit_type = obs.observation["feature_screen"][_UNIT_TYPE]
               unit_y, unit_x = (unit_type == _PROTOSS_NEXUS).nonzero()
 
-              # Change the position to give the probe the opportunity to build pylon?
-              ####target = self.transformLocation(int(unit_x.mean()), 0, int(unit_y.mean()), 20)
 
-              target = [unit_x[0], unit_y[0]]
+              if self.base_top_left[0] == True:
+                  target = [unit_x[0]+5, unit_y[0]+5]
+              else:
+                  target = [unit_x[0]+10, unit_y[0]-5]
 
               self.pylon_built = True
                 
@@ -94,11 +103,14 @@ class SimpleAgent(base_agent.BaseAgent):
           unit_type = obs.observation["feature_screen"][_UNIT_TYPE]
           unit_y, unit_x = (unit_type == _PROTOSS_NEXUS).nonzero()
 
-          target = [unit_x[0], unit_y[0]]
 
-          #target = self.transformLocation(int(unit_x.mean()), 20, int(unit_y.mean()), 0)
+
+          if self.base_top_left[0] == True:
+              target = [unit_x[0] + 5, unit_y[0] + 5]
+          else:
+              target = [unit_x[0] + 10, unit_y[0] - 5]
             
-          self.pylon_built = True
+          self.gateway_built = True
             
           return actions.FunctionCall(_BUILD_GATEWAY, [_NOT_QUEUED, target])
 
