@@ -9,6 +9,7 @@ from pysc2.lib import actions
 from pysc2.agents import base_agent
 from pysc2.lib import features 
 import time
+import json
 
 # Functions
 _BUILD_PYLON = actions.FUNCTIONS.Build_Pylon_screen.id
@@ -55,15 +56,14 @@ class SimpleAgent(base_agent.BaseAgent):
   def step(self, obs):
       super(SimpleAgent, self).step(obs)
         
-      time.sleep(0.5)
         
       #if self.base_top_left is None:
           #player_y, player_x = (obs.observation['minimap'][_PLAYER_RELATIVE] == _PLAYER_SELF).nonzero()
           #self.base_top_left = player_y.mean() <= 47
-            
+
       if not self.pylon_built:
           if not self.probe_selected:
-              unit_type = obs.observation["screen"][_UNIT_TYPE]
+              unit_type = obs.observation["feature_screen"][_UNIT_TYPE]
               unit_y, unit_x = (unit_type == _PROTOSS_PROBE).nonzero()
                 
               target = [unit_x[0], unit_y[0]]
@@ -72,16 +72,17 @@ class SimpleAgent(base_agent.BaseAgent):
                 
               return actions.FunctionCall(_SELECT_POINT, [_NOT_QUEUED, target])
           elif _BUILD_PYLON in obs.observation["available_actions"]:
-              unit_type = obs.observation["screen"][_UNIT_TYPE]
+              unit_type = obs.observation["feature_screen"][_UNIT_TYPE]
               unit_y, unit_x = (unit_type == _PROTOSS_NEXUS).nonzero()
-                
+
+              # Change the position to give the probe the opportunity to build pylon?
               target = self.transformLocation(int(unit_x.mean()), 0, int(unit_y.mean()), 20)
                 
               self.pylon_built = True
                 
               return actions.FunctionCall(_BUILD_PYLON, [_NOT_QUEUED, target])
       elif not self.gateway_built and _BUILD_GATEWAY in obs.observation["available_actions"]:
-          unit_type = obs.observation["screen"][_UNIT_TYPE]
+          unit_type = obs.observation["feature_screen"][_UNIT_TYPE]
           unit_y, unit_x = (unit_type == _PROTOSS_NEXUS).nonzero()
             
           target = self.transformLocation(int(unit_x.mean()), 20, int(unit_y.mean()), 0)
