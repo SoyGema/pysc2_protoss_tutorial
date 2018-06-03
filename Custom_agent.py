@@ -19,6 +19,8 @@ import time
 import numpy
 
 # Functions
+from utils.debug import print_area
+
 _BUILD_PYLON = actions.FUNCTIONS.Build_Pylon_screen.id
 _NOOP = actions.FUNCTIONS.no_op.id
 _SELECT_POINT = actions.FUNCTIONS.select_point.id
@@ -65,10 +67,10 @@ class SimpleAgent(base_agent.BaseAgent):
             y, x = mask.nonzero()
             return list(zip(x, y))
 
-
         if self.base_top_left is None:
             PLAYER_RELATIVE = obs.observation.feature_screen.player_relative
             player_ = _xy_locs(PLAYER_RELATIVE == _PLAYER_SELF)
+            print_area(player_)
             self.base_top_left = numpy.mean(player_, axis=0).round() <= 31
 
         if not self.pylon_built:
@@ -104,10 +106,10 @@ class SimpleAgent(base_agent.BaseAgent):
 
                 if self.base_top_left[0] == True:
                     print("area is top left")
-                    target = [unit_x[0]+12, unit_y[0]]
+                    target = [unit_x[0] + 12, unit_y[0]]
                 else:
                     print("area is bottom right")
-                    target = [unit_x[0]+12, unit_y[0]]
+                    target = [unit_x[0] + 12, unit_y[0]]
 
                 self.gateway_built = True
 
