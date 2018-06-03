@@ -26,6 +26,8 @@ Inside of Environment>Actions and Observations>Observation>Screen>Power
 Returns --> array of tuples of power area perimeter from Protoss once it is built . 
 .nonzero() is added due to show when the area is built 
 
+Might be as well useful to know in which feature screen each method is represented 
+
 #### Using Debug print method documentation
 
 Will print the area of the called method 
